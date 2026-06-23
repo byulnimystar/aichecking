@@ -1,0 +1,22 @@
+{
+  "name": "11.-신정민-copy-of-신정민-작성-20260125-공공기관-ai-활용-적정성-체크리스트",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "react-dom": "^19.2.3",
+    "@google/genai": "^1.38.0",
+    "react": "^19.2.3"
+  },
+  "devDependencies": {
+    "@types/node": "^22.14.0",
+    "@vitejs/plugin-react": "^5.0.0",
+    "typescript": "~5.8.2",
+    "vite": "^6.2.0"
+  }
+}
