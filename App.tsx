@@ -1,5 +1,18 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
+import { 
+  ClipboardCheck, 
+  Info, 
+  AlertTriangle, 
+  Lightbulb, 
+  Building, 
+  Check, 
+  Loader2, 
+  Bot,
+  RefreshCcw,
+  ShieldCheck
+} from 'lucide-react';
 import { CHECKLIST_DATA } from './constants';
 import { ChecklistState, EvaluationResult } from './types';
 import { getAIFeedback } from './services/geminiService';
@@ -26,6 +39,12 @@ const App: React.FC = () => {
     setState(prev => ({ ...prev, [id]: value }));
   };
 
+  const remainingCount = useMemo(() => {
+    const total = CHECKLIST_DATA.reduce((acc, s) => acc + s.items.length, 0);
+    const answered = Object.values(state).filter(v => v !== null).length;
+    return total - answered;
+  }, [state]);
+
   const progress = useMemo(() => {
     const total = CHECKLIST_DATA.reduce((acc, s) => acc + s.items.length, 0);
     const answered = Object.values(state).filter(v => v !== null).length;
@@ -38,8 +57,8 @@ const App: React.FC = () => {
   }, [state]);
 
   const handleSubmit = async () => {
-    if (progress < 100) {
-      alert('모든 항목을 체크해주세요.');
+    if (remainingCount > 0) {
+      alert(`아직 응답하지 않은 항목이 ${remainingCount}개 있습니다. 모든 항목을 체크해주세요.`);
       return;
     }
     setIsSubmitting(true);
@@ -74,10 +93,10 @@ const App: React.FC = () => {
         <div className="max-w-4xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
           <div>
             <h1 className="text-2xl font-bold flex items-center gap-2">
-              <i className="fas fa-clipboard-check text-indigo-300"></i>
+              <ClipboardCheck className="text-indigo-300" size={28} />
               기관용 AI 활용 적정성 체크리스트
             </h1>
-            <p className="text-indigo-200 text-sm mt-1">인공지능기본법 기반 실무 가이드라인</p>
+            <p className="text-indigo-200 text-sm mt-1 font-medium">인공지능기본법 기반 실무 가이드라인</p>
           </div>
           <div className="w-full md:w-48 bg-indigo-800 rounded-full h-4 relative overflow-hidden">
             <div 
@@ -92,14 +111,24 @@ const App: React.FC = () => {
       </header>
 
       <main className="max-w-4xl mx-auto px-4 mt-8">
+        <AnimatePresence mode="wait">
         {evaluation ? (
-          <div className="bg-white rounded-xl shadow-xl overflow-hidden border border-indigo-100 animate-in fade-in duration-500">
+          <motion.div 
+            key="evaluation"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="bg-white rounded-xl shadow-xl overflow-hidden border border-indigo-100"
+          >
             <div className={`p-6 text-white ${
               evaluation.riskLevel === '높음' || evaluation.riskLevel === '매우 높음' ? 'bg-red-600' : 
               evaluation.riskLevel === '보통' ? 'bg-orange-500' : 'bg-green-600'
             }`}>
               <div className="flex justify-between items-center">
-                <h2 className="text-2xl font-bold">진단 결과: {evaluation.riskLevel} 위험</h2>
+                <h2 className="text-2xl font-bold flex items-center gap-2">
+                  <ShieldCheck size={28} />
+                  진단 결과: {evaluation.riskLevel} 위험
+                </h2>
                 <div className="text-4xl font-bold">{evaluation.complianceScore}<span className="text-lg">점</span></div>
               </div>
             </div>
@@ -107,7 +136,7 @@ const App: React.FC = () => {
             <div className="p-8 space-y-8">
               <section>
                 <h3 className="text-lg font-bold text-gray-800 mb-2 flex items-center gap-2">
-                  <i className="fas fa-info-circle text-indigo-500"></i>
+                  <Info className="text-indigo-500" size={20} />
                   종합 요약
                 </h3>
                 <p className="text-gray-600 leading-relaxed bg-indigo-50 p-4 rounded-lg border-l-4 border-indigo-500">
@@ -117,7 +146,7 @@ const App: React.FC = () => {
 
               {isHighImpact && (
                 <div className="bg-red-50 border-2 border-red-200 p-4 rounded-lg flex gap-4 items-start">
-                  <i className="fas fa-exclamation-triangle text-red-500 text-xl mt-1"></i>
+                  <AlertTriangle className="text-red-500 mt-1 shrink-0" size={24} />
                   <div>
                     <h4 className="font-bold text-red-700">주의: 고영향 인공지능(High-impact AI) 해당</h4>
                     <p className="text-sm text-red-600 mt-1">
@@ -130,7 +159,7 @@ const App: React.FC = () => {
 
               <section>
                 <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
-                  <i className="fas fa-lightbulb text-yellow-500"></i>
+                  <Lightbulb className="text-yellow-500" size={20} />
                   AI 권고 사항
                 </h3>
                 <ul className="space-y-3">
@@ -146,19 +175,26 @@ const App: React.FC = () => {
               <div className="pt-6 border-t border-gray-100 flex justify-center">
                 <button 
                   onClick={resetForm}
-                  className="px-8 py-3 bg-indigo-600 text-white rounded-lg font-bold hover:bg-indigo-700 transition shadow-md"
+                  className="px-8 py-3 bg-indigo-600 text-white rounded-lg font-bold hover:bg-indigo-700 transition flex items-center gap-2 shadow-md"
                 >
+                  <RefreshCcw size={20} />
                   새로운 진단 시작하기
                 </button>
               </div>
             </div>
-          </div>
+          </motion.div>
         ) : (
-          <div className="space-y-8">
+          <motion.div 
+            key="checklist"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="space-y-8"
+          >
             {/* Org Context Input */}
             <div className="bg-white p-6 rounded-xl shadow-sm border border-indigo-50">
               <h2 className="text-lg font-bold text-indigo-900 mb-4 flex items-center gap-2">
-                <i className="fas fa-building"></i>
+                <Building size={20} />
                 기관 및 업무 정보
               </h2>
               <textarea 
@@ -180,10 +216,22 @@ const App: React.FC = () => {
                 </div>
                 <div className="divide-y divide-gray-50">
                   {section.items.map((item) => (
-                    <div key={item.id} className="p-6 hover:bg-gray-50 transition-colors">
+                    <div 
+                      key={item.id} 
+                      className={`p-6 transition-colors ${
+                        state[item.id] === null 
+                        ? 'bg-amber-50/30 hover:bg-amber-50/50' 
+                        : 'hover:bg-gray-50'
+                      }`}
+                    >
                       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                         <div className="flex-1">
-                          <p className="text-gray-800 font-medium">{item.text}</p>
+                          <div className="flex items-center gap-2">
+                            <p className="text-gray-800 font-medium">{item.text}</p>
+                            {state[item.id] === null && (
+                              <span className="text-[10px] bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded font-bold animate-pulse">응답 필요</span>
+                            )}
+                          </div>
                           <span className="inline-block mt-2 px-2 py-1 bg-gray-100 text-gray-500 text-[10px] rounded font-bold">
                             근거: 인공지능기본법 {item.lawReference}
                           </span>
@@ -191,14 +239,16 @@ const App: React.FC = () => {
                         <div className="flex gap-2 shrink-0">
                           {item.type === 'checkbox' ? (
                             <button 
-                              onClick={() => handleToggle(item.id, state[item.id] === true ? null : true)}
+                              onClick={() => handleToggle(item.id, state[item.id] === true ? false : true)}
                               className={`w-12 h-12 rounded-lg border-2 flex items-center justify-center transition ${
                                 state[item.id] === true 
                                 ? 'bg-green-500 border-green-500 text-white' 
-                                : 'border-gray-200 text-gray-300 hover:border-indigo-300'
+                                : state[item.id] === false
+                                ? 'bg-white border-gray-300 text-gray-300'
+                                : 'border-amber-300 bg-white text-transparent hover:border-indigo-300'
                               }`}
                             >
-                              <i className="fas fa-check text-xl"></i>
+                              <Check size={24} className={state[item.id] === true ? 'opacity-100' : 'opacity-20'} />
                             </button>
                           ) : (
                             <>
@@ -240,31 +290,38 @@ const App: React.FC = () => {
             )}
 
             {/* Submit Button */}
-            <div className="flex justify-center pb-12">
+            <div className="flex flex-col items-center gap-4 pb-12">
+              {remainingCount > 0 && (
+                <p className="text-amber-600 font-bold text-sm flex items-center gap-1">
+                  <Info size={14} />
+                  아직 응답하지 않은 항목이 {remainingCount}개 있습니다.
+                </p>
+              )}
               <button 
                 onClick={handleSubmit}
-                disabled={isSubmitting || progress < 100}
+                disabled={isSubmitting || remainingCount > 0}
                 className={`group relative px-12 py-4 rounded-xl font-bold text-white text-lg shadow-xl transition-all ${
-                  isSubmitting || progress < 100 
-                  ? 'bg-gray-400 cursor-not-allowed' 
-                  : 'bg-indigo-600 hover:bg-indigo-700 hover:-translate-y-1'
+                  isSubmitting || remainingCount > 0 
+                  ? 'bg-gray-400 cursor-not-allowed opacity-70' 
+                  : 'bg-indigo-600 hover:bg-indigo-700 hover:-translate-y-1 active:scale-95'
                 }`}
               >
                 {isSubmitting ? (
                   <span className="flex items-center gap-2">
-                    <i className="fas fa-circle-notch animate-spin"></i>
+                    <Loader2 className="animate-spin" size={20} />
                     AI 분석 중...
                   </span>
                 ) : (
                   <span className="flex items-center gap-2">
-                    <i className="fas fa-robot"></i>
-                    진단 결과 확인 및 AI 피드백 받기
+                    <Bot size={24} />
+                    {remainingCount > 0 ? `진단 진행 중 (${progress}%)` : "진단 결과 확인 및 AI 피드백 받기"}
                   </span>
                 )}
               </button>
             </div>
-          </div>
+          </motion.div>
         )}
+        </AnimatePresence>
       </main>
 
       {/* Floating Info */}

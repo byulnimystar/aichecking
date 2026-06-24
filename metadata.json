@@ -2,5 +2,7 @@
   "name": "11. 신정민-Copy of 신정민 작성-20260125-공공기관 AI 활용 적정성 체크리스트",
   "description": "인공지능기본법 및 기관별 실무 지침에 기반한 AI 도입 및 활용 적정성 자가진단 및 AI 기반 피드백 시스템",
   "requestFramePermissions": [],
-  "majorCapabilities": []
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
 }
